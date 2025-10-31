@@ -13,11 +13,12 @@ public class RegistryController {
         this.simpleChat = simpleChat;
     }
 
+    // Cambiado para recibir nombre por query param
     @PostMapping("/register")
-    public String register(@RequestBody Map<String, String> req) throws Exception {
-        String name = req.get("name");
+    public String register(@RequestParam String name) throws Exception {
         String timestamp = Instant.now().toString();
         simpleChat.put(name, timestamp);
+        System.out.println("🟢 Nombre registrado en backend: " + name);
         return "Registered: " + name;
     }
 
