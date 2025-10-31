@@ -10,9 +10,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class LoadBalancerController {
 
     private final List<String> backends = Arrays.asList(
-            "http://localhost:8081",
-            "http://localhost:8082"
+        "http://ec2-54-234-165-68.compute-1.amazonaws.com:8082",
+        "http://ec2-35-175-220-60.compute-1.amazonaws.com:8081"
     );
+
 
     private final AtomicInteger index = new AtomicInteger(0);
 
