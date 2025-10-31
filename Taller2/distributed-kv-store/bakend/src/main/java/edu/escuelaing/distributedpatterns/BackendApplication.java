@@ -3,6 +3,7 @@ package edu.escuelaing.distributedpatterns;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Autowired;  // <--- IMPORT CORRECTO
 import jakarta.annotation.PostConstruct;
 
 @SpringBootApplication
@@ -18,7 +19,8 @@ public class BackendApplication {
     @PostConstruct
     public void registerAtLoadBalancer() {
         try {
-            String backendUrl = System.getProperty("backend.url"); // la pasamos al iniciar
+            // Recibe la URL del backend como propiedad al iniciar la app
+            String backendUrl = System.getProperty("backend.url", "http://localhost:8081");
             String loadBalancerUrl = "http://ec2-ZZ-ZZ-ZZ-ZZ.compute-1.amazonaws.com:8080/nodes/register?url=" + backendUrl;
 
             System.out.println("🚀 Intentando registrar en: " + loadBalancerUrl);
@@ -29,4 +31,3 @@ public class BackendApplication {
         }
     }
 }
-
