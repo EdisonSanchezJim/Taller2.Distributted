@@ -1,33 +1,64 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Load Balancer Dashboard</title>
-  <style>
-    body { font-family: Arial; margin: 40px; }
-    ul { list-style: none; padding: 0; }
-    li { padding: 5px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Registro de Nombres</title>
 </head>
 <body>
-  <h1>Backends Registrados</h1>
-  <ul id="nodes"></ul>
+    <h1>Registrar Nombre</h1>
+    <form id="register-form">
+        <input type="text" id="name" placeholder="Ingresa tu nombre" required>
+        <button type="submit">Registrar</button>
+    </form>
 
-  <script>
-    async function loadNodes() {
-      const res = await fetch("/nodes");
-      const data = await res.json();
-      const list = document.getElementById("nodes");
-      list.innerHTML = "";
-      for (const url of data) {
-        const li = document.createElement("li");
-        li.textContent = url;
-        list.appendChild(li);
-      }
-    }
+    <h2>Nombres registrados</h2>
+    <ul id="names-list"></ul>
 
-    loadNodes();
-    setInterval(loadNodes, 5000); // refresca cada 5s
-  </script>
+    <script>
+        const form = document.getElementById('register-form');
+        const nameInput = document.getElementById('name');
+        const list = document.getElementById('names-list');
+
+        // Función para registrar nombre
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = nameInput.value.trim();
+            if (!name) return;
+
+            try {
+                await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name})
+                });
+                nameInput.value = '';
+                fetchNames(); // actualizar lista
+            } catch (err) {
+                console.error('Error registrando nombre:', err);
+            }
+        });
+
+        // Función para obtener nombres de todos los backends
+        async function fetchNames() {
+            try {
+                const response = await fetch('/api/all-names');
+                const data = await response.json();
+                list.innerHTML = '';
+                for (const [name, timestamp] of Object.entries(data)) {
+                    const li = document.createElement('li');
+                    li.textContent = `${name} - ${timestamp}`;
+                    list.appendChild(li);
+                }
+            } catch (err) {
+                console.error('Error cargando nombres:', err);
+            }
+        }
+
+        // Cargar nombres al inicio
+        fetchNames();
+
+        // Actualizar cada 5 segundos
+        setInterval(fetchNames, 5000);
+    </script>
 </body>
 </html>
