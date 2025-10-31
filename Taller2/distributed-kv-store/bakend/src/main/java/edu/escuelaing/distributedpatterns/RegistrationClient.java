@@ -5,15 +5,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import java.util.Map;
 
 @Component
 public class RegistrationClient {
 
-    // URL del Load Balancer (puede ser IP pública o DNS)
     @Value("${loadbalancer.url}")
     private String loadBalancerUrl;
 
-    // URL completa del backend (IP pública + puerto)
     @Value("${backend.url}")
     private String backendUrl;
 
@@ -22,23 +21,25 @@ public class RegistrationClient {
     @PostConstruct
     public void register() {
         try {
-            String registerUrl = loadBalancerUrl + "/nodes/register?url=" + backendUrl;
+            String registerUrl = loadBalancerUrl + "/register"; // Endpoint corregido
+            Map<String, String> payload = Map.of("name", backendUrl); // JSON body esperado
             System.out.println("🚀 Intentando registrar en: " + registerUrl);
-            restTemplate.postForObject(registerUrl, null, String.class);
-            System.out.println("🟢 Nodo registrado: " + backendUrl);
+            String response = restTemplate.postForObject(registerUrl, payload, String.class);
+            System.out.println("🟢 Nodo registrado: " + response);
         } catch (Exception e) {
             System.err.println("❌ Error registrando en balanceador: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     @PreDestroy
     public void unregister() {
         try {
-            String unregisterUrl = loadBalancerUrl + "/nodes/unregister?url=" + backendUrl;
-            restTemplate.delete(unregisterUrl);
+            // Opcional: si quieres implementar un endpoint de "unregister" en tu backend, aquí va
             System.out.println("🔴 Nodo eliminado: " + backendUrl);
         } catch (Exception e) {
             System.err.println("⚠️ Error al eliminar nodo del balanceador: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
