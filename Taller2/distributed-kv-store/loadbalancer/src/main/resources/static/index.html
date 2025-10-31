@@ -2,52 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Registro de Nombres Distribuido</title>
+    <title>Distributed Name Registry</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        input { padding: 0.5em; width: 200px; }
+        button { padding: 0.5em 1em; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 0.5em; }
+    </style>
 </head>
 <body>
-    <h1>Registrar Nombre</h1>
-    <input type="text" id="nameInput" placeholder="Escribe tu nombre">
-    <button onclick="registerName()">Registrar</button>
+    <h1>Distributed Name Registry</h1>
 
-    <h2>Nombres Registrados</h2>
+    <div>
+        <input type="text" id="nameInput" placeholder="Enter your name" />
+        <button onclick="registerName()">Register</button>
+    </div>
+
+    <h2>Registered Names</h2>
     <ul id="namesList"></ul>
 
     <script>
+        const loadBalancerBase = '/api';
+
+        // Registrar nombre
         async function registerName() {
-            const name = document.getElementById("nameInput").value;
-            if(!name) return alert("Escribe un nombre");
-
-            const response = await fetch('/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            });
-
-            if(response.ok) {
-                document.getElementById("nameInput").value = '';
-                loadNames();
-            } else {
-                alert("Error registrando nombre");
+            const name = document.getElementById("nameInput").value.trim();
+            if (!name) {
+                alert("Please enter a name");
+                return;
             }
-        }
 
-        async function loadNames() {
-            const response = await fetch('/api/names');
-            if(response.ok) {
-                const data = await response.json();
-                const list = document.getElementById("namesList");
-                list.innerHTML = '';
-                for(const [name, timestamp] of Object.entries(data)) {
-                    const li = document.createElement('li');
-                    li.textContent = `${name} - ${timestamp}`;
-                    list.appendChild(li);
+            try {
+                const response = await fetch(`${loadBalancerBase}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+
+                if (response.ok) {
+                    document.getElementById("nameInput").value = '';
+                    loadNames();
+                } else {
+                    const text = await response.text();
+                    alert("Error registering: " + text);
                 }
-            }
-        }
-
-        // Actualiza la lista cada 2 segundos
-        setInterval(loadNames, 2000);
-        loadNames();
-    </script>
-</body>
-</html>
+            } catch (err) {
+                console.error(err);
