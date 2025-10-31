@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/")
 public class RegistryController {
 
     private final SimpleChat simpleChat;
@@ -13,9 +14,14 @@ public class RegistryController {
         this.simpleChat = simpleChat;
     }
 
-    // Cambiado para recibir nombre por query param
+    // Recibe el nombre desde el cuerpo en formato JSON: {"name":"valor"}
     @PostMapping("/register")
-    public String register(@RequestParam String name) throws Exception {
+    public String register(@RequestBody Map<String, String> payload) throws Exception {
+        String name = payload.get("name");
+        if (name == null || name.isBlank()) {
+            return "Error: name cannot be empty";
+        }
+
         String timestamp = Instant.now().toString();
         simpleChat.put(name, timestamp);
         System.out.println("🟢 Nombre registrado en backend: " + name);
@@ -25,5 +31,11 @@ public class RegistryController {
     @GetMapping("/names")
     public Map<String, String> getAll() {
         return simpleChat.getMap();
+    }
+
+    // Opcional: sirve index.html si quieres abrirlo desde el navegador
+    @GetMapping("/")
+    public String home() {
+        return "index.html"; // Asegúrate de tener index.html en src/main/resources/static/
     }
 }
