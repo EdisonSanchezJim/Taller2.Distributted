@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Distributed KV Store</title>
+  <style>
+    body { font-family: Arial; margin: 40px; }
+    input, button { margin: 5px; padding: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Registro de Nombres Distribuido</h1>
+  <input id="name" placeholder="Escribe tu nombre">
+  <button onclick="register()">Registrar</button>
+  <button onclick="loadNames()">Actualizar Lista</button>
+
+  <h2>Nombres registrados:</h2>
+  <ul id="list"></ul>
+
+  <script>
+    async function register() {
+      const name = document.getElementById("name").value;
+      await fetch("/register", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({name})
+      });
+      loadNames();
+    }
+
+    async function loadNames() {
+      const res = await fetch("/names");
+      const data = await res.json();
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+      for (const [key, value] of Object.entries(data)) {
+        const li = document.createElement("li");
+        li.textContent = `${key} → ${new Date(value).toLocaleString()}`;
+        list.appendChild(li);
+      }
+    }
+
+    loadNames();
+  </script>
+</body>
+</html>

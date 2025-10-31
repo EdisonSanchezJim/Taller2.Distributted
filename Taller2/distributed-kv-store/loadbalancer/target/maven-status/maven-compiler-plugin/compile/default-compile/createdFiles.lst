@@ -1,0 +1,4 @@
+edu/escuelaing/distributedpatterns/loadbalancer/LoadBalancerApplication.class
+edu/escuelaing/distributedpatterns/loadbalancer/App.class
+edu/escuelaing/distributedpatterns/loadbalancer/LoadBalancerController.class
+edu/escuelaing/distributedpatterns/loadbalancer/NodeRegistryController.class
