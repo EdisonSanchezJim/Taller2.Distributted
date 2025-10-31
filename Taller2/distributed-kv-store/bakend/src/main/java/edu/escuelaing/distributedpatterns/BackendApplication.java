@@ -15,9 +15,8 @@ public class BackendApplication {
     @PostConstruct
     public void registerAtLoadBalancer() {
         try {
-            String port = System.getProperty("server.port", "8081");
-            String backendUrl = "http://localhost:" + port;
-            String loadBalancerUrl = "http://localhost:8080/nodes/register?url=" + backendUrl;
+            String backendUrl = System.getProperty("backend.url"); // la pasamos al iniciar
+            String loadBalancerUrl = "http://ec2-ZZ-ZZ-ZZ-ZZ.compute-1.amazonaws.com:8080/nodes/register?url=" + backendUrl;
 
             System.out.println("🚀 Intentando registrar en: " + loadBalancerUrl);
             new RestTemplate().postForObject(loadBalancerUrl, null, String.class);
@@ -27,3 +26,4 @@ public class BackendApplication {
         }
     }
 }
+
