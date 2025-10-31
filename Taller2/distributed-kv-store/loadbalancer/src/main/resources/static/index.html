@@ -1,62 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Distributed KV Store</title>
-  <style>
-    body { font-family: Arial; margin: 40px; }
-    input, button { margin: 5px; padding: 5px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Registro de Nombres</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h1 { color: #333; }
+        form { margin-bottom: 20px; }
+        input[type="text"] { padding: 8px; font-size: 16px; }
+        button { padding: 8px 12px; font-size: 16px; }
+        ul { list-style: none; padding: 0; }
+        li { margin: 4px 0; background: #f0f0f0; padding: 6px 10px; border-radius: 4px; }
+    </style>
 </head>
 <body>
-  <h1>Registro de Nombres Distribuido</h1>
-  <input id="name" placeholder="Escribe tu nombre">
-  <button onclick="register()">Registrar</button>
-  <button onclick="loadNames()">Actualizar Lista</button>
+    <h1>Registro de Nombres</h1>
 
-  <h2>Nombres registrados:</h2>
-  <ul id="list"></ul>
+    <form id="registerForm">
+        <input type="text" id="nameInput" placeholder="Ingresa tu nombre" required>
+        <button type="submit">Registrar</button>
+    </form>
 
-  <script>
-    // URL del Load Balancer: reemplaza con la IP pública o DNS de tu instancia EC2 de LB
-    const LB_URL = "http://<EC2_LB_IP>:8080/api";
+    <h2>Lista de Nombres</h2>
+    <ul id="namesList"></ul>
 
-    async function register() {
-      const name = document.getElementById("name").value;
-      if (!name) return alert("Escribe un nombre");
+    <script>
+        var form = document.getElementById('registerForm');
+        var input = document.getElementById('nameInput');
+        var namesList = document.getElementById('namesList');
+        var apiBase = '/api'; // Base URL del load balancer
 
-      try {
-        await fetch(`${LB_URL}/register`, {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({name})
-        });
-        loadNames();
-      } catch (err) {
-        console.error("Error registrando nombre:", err);
-        alert("No se pudo registrar el nombre");
-      }
-    }
-
-    async function loadNames() {
-      try {
-        const res = await fetch(`${LB_URL}/names`);
-        const data = await res.json();
-        const list = document.getElementById("list");
-        list.innerHTML = "";
-        for (const [key, value] of Object.entries(data)) {
-          const li = document.createElement("li");
-          li.textContent = `${key} → ${new Date(value).toLocaleString()}`;
-          list.appendChild(li);
-        }
-      } catch (err) {
-        console.error("Error cargando nombres:", err);
-        alert("No se pudieron cargar los nombres");
-      }
-    }
-
-    // Cargar la lista al inicio
-    loadNames();
-  </script>
-</body>
-</html>
+        // Función para mostrar nombres (síncrona)
+        function fetchNames() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', apiBase + '/all-names', false); // false = síncrono
+            try {
+                xhr.send();
+                if (xhr.status === 200) {
+                    var data = JSON
