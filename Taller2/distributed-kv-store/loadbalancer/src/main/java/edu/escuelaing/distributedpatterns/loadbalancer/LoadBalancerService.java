@@ -4,6 +4,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import java.time.Instant;
 import java.util.List;
@@ -18,7 +19,7 @@ public class LoadBalancerService {
     private final RestTemplate restTemplate;
 
     public LoadBalancerService() {
-        var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(1000);
         factory.setReadTimeout(2000);
         this.restTemplate = new RestTemplate(factory);
@@ -47,16 +48,16 @@ public class LoadBalancerService {
     public String nextBackend() {
         int size = backends.size();
         if (size == 0) throw new IllegalStateException("No backends available");
-        int i = Math.abs(index.getAndUpdate(n -> (n + 1) % size));
+        int i = Math.floorMod(index.getAndUpdate(n -> n + 1), size);
         return backends.get(i);
     }
 
     public boolean isAlive(String backendUrl) {
         try {
-            String healthUrl = backendUrl + "/health";
-            ResponseEntity<String> r = restTemplate.exchange(healthUrl, HttpMethod.GET, null, String.class);
-            if (r.getStatusCode().is2xxSuccessful()) return true;
+            ResponseEntity<String> r = restTemplate.exchange(backendUrl + "/health", HttpMethod.GET, null, String.class);
+            return r.getStatusCode().is2xxSuccessful();
         } catch (Exception ignore) {}
+
         try {
             ResponseEntity<String> r2 = restTemplate.exchange(backendUrl + "/names", HttpMethod.GET, null, String.class);
             return r2.getStatusCode().is2xxSuccessful();
@@ -66,5 +67,7 @@ public class LoadBalancerService {
         }
     }
 
-    public RestTemplate getRestTemplate() { return restTemplate; }
+    public RestTemplate getRestTemplate() {
+        return restTemplate;
+    }
 }
