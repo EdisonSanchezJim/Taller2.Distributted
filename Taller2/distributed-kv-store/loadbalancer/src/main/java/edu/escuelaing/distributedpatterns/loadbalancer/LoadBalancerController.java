@@ -3,21 +3,30 @@ package edu.escuelaing.distributedpatterns.loadbalancer;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 
-import java.util.List;
-import java.util.Map;
+import java.time.Duration;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.Collections;
 
 @RestController
-@RequestMapping("/api") // Opcional: agrupa todos los endpoints bajo /api
+@RequestMapping("/api") // Todos los endpoints bajo /api
 public class LoadBalancerController {
 
     private final CopyOnWriteArrayList<String> backends = new CopyOnWriteArrayList<>();
     private final AtomicInteger index = new AtomicInteger(0);
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
+    public LoadBalancerController() {
+        // Configurar RestTemplate con timeout opcional
+        this.restTemplate = new RestTemplateBuilder()
+                .setConnectTimeout(Duration.ofSeconds(2))
+                .setReadTimeout(Duration.ofSeconds(2))
+                .build();
+    }
+
+    // Obtiene el siguiente backend usando round-robin
     private String getNextBackend() {
         if (backends.isEmpty()) {
             throw new IllegalStateException("No hay backends disponibles");
@@ -26,7 +35,8 @@ public class LoadBalancerController {
         return backends.get(i);
     }
 
-    // Registrar dinámicamente un backend
+    // Endpoint para registrar dinámicamente un backend
+    // POST /api/nodes/register?url=http://localhost:8081
     @PostMapping("/nodes/register")
     public String registerBackend(@RequestParam String url) {
         if (url == null || url.isBlank()) return "URL inválida";
@@ -39,13 +49,15 @@ public class LoadBalancerController {
         }
     }
 
-    // Listar todos los nodos registrados
+    // Listar todos los backends registrados
     @GetMapping("/nodes")
     public List<String> listNodes() {
         return List.copyOf(backends);
     }
 
-    // Registrar un nombre usando round-robin
+    // Endpoint para registrar un nombre en un backend disponible
+    // POST /api/register
+    // Body JSON: {"name":"Juan"}
     @PostMapping("/register")
     public ResponseEntity<String> registerName(@RequestBody Map<String, String> body) {
         try {
@@ -59,7 +71,8 @@ public class LoadBalancerController {
         }
     }
 
-    // Listar nombres usando round-robin
+    // Consultar los nombres desde un backend usando round-robin
+    // GET /api/names
     @GetMapping("/names")
     public ResponseEntity<Map<String, String>> listNames() {
         try {
@@ -71,5 +84,21 @@ public class LoadBalancerController {
             System.err.println("❌ Error al consultar nombres: " + e.getMessage());
             return ResponseEntity.internalServerError().body(Collections.emptyMap());
         }
+    }
+
+    // Consultar todos los nombres de todos los backends (para la web)
+    // GET /api/all-names
+    @GetMapping("/all-names")
+    public ResponseEntity<Map<String, String>> listAllNames() {
+        Map<String, String> combined = new HashMap<>();
+        for (String backend : backends) {
+            try {
+                Map<String, String> data = restTemplate.getForObject(backend + "/names", Map.class);
+                if (data != null) combined.putAll(data);
+            } catch (Exception e) {
+                System.err.println("❌ Error consultando " + backend + ": " + e.getMessage());
+            }
+        }
+        return ResponseEntity.ok(combined);
     }
 }
