@@ -20,23 +20,32 @@
   <script>
     async function register() {
       const name = document.getElementById("name").value;
+      if (!name) return alert("Escribe un nombre");
+
       await fetch("/register", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({name})
       });
+
       loadNames();
     }
 
     async function loadNames() {
-      const res = await fetch("/names");
-      const data = await res.json();
-      const list = document.getElementById("list");
-      list.innerHTML = "";
-      for (const [key, value] of Object.entries(data)) {
-        const li = document.createElement("li");
-        li.textContent = `${key} → ${new Date(value).toLocaleString()}`;
-        list.appendChild(li);
+      try {
+        const res = await fetch("/names");
+        const data = await res.json();
+        const list = document.getElementById("list");
+        list.innerHTML = "";
+
+        for (const [key, value] of Object.entries(data)) {
+          const li = document.createElement("li");
+          li.textContent = `${key} → ${new Date(value).toLocaleString()}`;
+          list.appendChild(li);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("No se pudo cargar la lista");
       }
     }
 
