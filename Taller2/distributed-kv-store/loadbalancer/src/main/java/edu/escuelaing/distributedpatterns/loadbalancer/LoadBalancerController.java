@@ -27,7 +27,7 @@ public class LoadBalancerController {
     }
 
     // Registrar dinámicamente un backend
-    @PostMapping("/register")
+    @PostMapping("/nodes/register")
     public String registerBackend(@RequestParam String url) {
         if (url == null || url.isBlank()) return "URL inválida";
         if (!backends.contains(url)) {
