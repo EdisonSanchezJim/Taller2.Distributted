@@ -2,45 +2,49 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Distributed KV Store</title>
+  <title>Load Balancer Dashboard</title>
   <style>
     body { font-family: Arial; margin: 40px; }
-    input, button { margin: 5px; padding: 5px; }
+    table { border-collapse: collapse; width: 60%; }
+    th, td { border: 1px solid #ccc; padding: 5px 10px; text-align: left; }
   </style>
 </head>
 <body>
-  <h1>Registro de Nombres Distribuido</h1>
-  <input id="name" placeholder="Escribe tu nombre">
-  <button onclick="register()">Registrar</button>
-  <button onclick="loadNames()">Actualizar Lista</button>
-
-  <h2>Nombres registrados:</h2>
-  <ul id="list"></ul>
+  <h1>Dashboard Load Balancer</h1>
+  <table>
+    <thead>
+      <tr><th>Backend URL</th><th>Status</th></tr>
+    </thead>
+    <tbody id="backends"></tbody>
+  </table>
 
   <script>
-    async function register() {
-      const name = document.getElementById("name").value;
-      await fetch("/register", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({name})
-      });
-      loadNames();
-    }
+    async function loadBackends() {
+      try {
+        const res = await fetch("/nodes");
+        const data = await res.json();
+        const tbody = document.getElementById("backends");
+        tbody.innerHTML = "";
 
-    async function loadNames() {
-      const res = await fetch("/names");
-      const data = await res.json();
-      const list = document.getElementById("list");
-      list.innerHTML = "";
-      for (const [key, value] of Object.entries(data)) {
-        const li = document.createElement("li");
-        li.textContent = `${key} → ${new Date(value).toLocaleString()}`;
-        list.appendChild(li);
+        for (const backend of data) {
+          const tr = document.createElement("tr");
+          const urlTd = document.createElement("td");
+          urlTd.textContent = backend.url;
+
+          const statusTd = document.createElement("td");
+          statusTd.textContent = backend.alive ? "🟢 Alive" : "🔴 Down";
+
+          tr.appendChild(urlTd);
+          tr.appendChild(statusTd);
+          tbody.appendChild(tr);
+        }
+      } catch (err) {
+        console.error(err);
       }
     }
 
-    loadNames();
+    loadBackends();
+    setInterval(loadBackends, 5000); // refresca cada 5s
   </script>
 </body>
 </html>
