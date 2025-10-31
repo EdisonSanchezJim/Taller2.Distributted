@@ -5,46 +5,29 @@
   <title>Load Balancer Dashboard</title>
   <style>
     body { font-family: Arial; margin: 40px; }
-    table { border-collapse: collapse; width: 60%; }
-    th, td { border: 1px solid #ccc; padding: 5px 10px; text-align: left; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 5px; }
   </style>
 </head>
 <body>
-  <h1>Dashboard Load Balancer</h1>
-  <table>
-    <thead>
-      <tr><th>Backend URL</th><th>Status</th></tr>
-    </thead>
-    <tbody id="backends"></tbody>
-  </table>
+  <h1>Backends Registrados</h1>
+  <ul id="nodes"></ul>
 
   <script>
-    async function loadBackends() {
-      try {
-        const res = await fetch("/nodes");
-        const data = await res.json();
-        const tbody = document.getElementById("backends");
-        tbody.innerHTML = "";
-
-        for (const backend of data) {
-          const tr = document.createElement("tr");
-          const urlTd = document.createElement("td");
-          urlTd.textContent = backend.url;
-
-          const statusTd = document.createElement("td");
-          statusTd.textContent = backend.alive ? "🟢 Alive" : "🔴 Down";
-
-          tr.appendChild(urlTd);
-          tr.appendChild(statusTd);
-          tbody.appendChild(tr);
-        }
-      } catch (err) {
-        console.error(err);
+    async function loadNodes() {
+      const res = await fetch("/nodes");
+      const data = await res.json();
+      const list = document.getElementById("nodes");
+      list.innerHTML = "";
+      for (const url of data) {
+        const li = document.createElement("li");
+        li.textContent = url;
+        list.appendChild(li);
       }
     }
 
-    loadBackends();
-    setInterval(loadBackends, 5000); // refresca cada 5s
+    loadNodes();
+    setInterval(loadNodes, 5000); // refresca cada 5s
   </script>
 </body>
 </html>
