@@ -1,66 +1,94 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Registro de Nombres Distribuido</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        input, button { margin: 5px; padding: 5px; font-size: 16px; }
-        ul { list-style: none; padding: 0; }
-        li { margin: 4px 0; background: #f0f0f0; padding: 6px 10px; border-radius: 4px; }
-    </style>
+    <title>Registro de Nombres Distribuido - Duplicado</title>
 </head>
 <body>
-    <h1>Registrar Nombre</h1>
-    <input type="text" id="nameInput" placeholder="Escribe tu nombre">
-    <button onclick="registerName()">Registrar</button>
-    <button onclick="loadNames()">Actualizar Lista</button>
+    <!-- Primer bloque -->
+    <h1>Registrar Nombre - Bloque 1</h1>
+    <input type="text" id="nameInput1" placeholder="Escribe tu nombre">
+    <button onclick="registerName1()">Registrar</button>
+    <h2>Nombres Registrados - Bloque 1</h2>
+    <ul id="namesList1"></ul>
 
-    <h2>Nombres Registrados</h2>
-    <ul id="namesList"></ul>
+    <!-- Segundo bloque -->
+    <h1>Registrar Nombre - Bloque 2</h1>
+    <input type="text" id="nameInput2" placeholder="Escribe tu nombre">
+    <button onclick="registerName2()">Registrar</button>
+    <h2>Nombres Registrados - Bloque 2</h2>
+    <ul id="namesList2"></ul>
 
     <script>
-        async function registerName() {
-            const name = document.getElementById("nameInput").value.trim();
+        // Bloque 1
+        async function registerName1() {
+            const name = document.getElementById("nameInput1").value;
             if(!name) return alert("Escribe un nombre");
-
             const response = await fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name })
             });
-
             if(response.ok) {
-                document.getElementById("nameInput").value = '';
-                loadNames();
+                document.getElementById("nameInput1").value = '';
+                loadNames1();
             } else {
                 alert("Error registrando nombre");
             }
         }
 
-        async function loadNames() {
+        async function loadNames1() {
             const response = await fetch('/api/names');
             if(response.ok) {
                 const data = await response.json();
-                const list = document.getElementById("namesList");
+                const list = document.getElementById("namesList1");
                 list.innerHTML = '';
-
                 for(const [name, timestamp] of Object.entries(data)) {
                     const li = document.createElement('li');
-                    // Convertir timestamp a fecha legible
-                    const date = new Date(timestamp);
-                    li.textContent = `${name} - ${date.toLocaleString()}`;
+                    li.textContent = `${name} - ${timestamp}`;
                     list.appendChild(li);
                 }
-            } else {
-                alert("Error al consultar nombres");
             }
         }
 
-        // Actualiza la lista cada 2 segundos automáticamente
-        setInterval(loadNames, 2000);
+        // Bloque 2
+        async function registerName2() {
+            const name = document.getElementById("nameInput2").value;
+            if(!name) return alert("Escribe un nombre");
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            if(response.ok) {
+                document.getElementById("nameInput2").value = '';
+                loadNames2();
+            } else {
+                alert("Error registrando nombre");
+            }
+        }
+
+        async function loadNames2() {
+            const response = await fetch('/api/names');
+            if(response.ok) {
+                const data = await response.json();
+                const list = document.getElementById("namesList2");
+                list.innerHTML = '';
+                for(const [name, timestamp] of Object.entries(data)) {
+                    const li = document.createElement('li');
+                    li.textContent = `${name} - ${timestamp}`;
+                    list.appendChild(li);
+                }
+            }
+        }
+
+        // Actualiza la lista automáticamente cada 2 segundos
+        setInterval(loadNames1, 2000);
+        setInterval(loadNames2, 2000);
+
         // Carga inicial
-        loadNames();
+        loadNames1();
+        loadNames2();
     </script>
 </body>
 </html>
