@@ -9,17 +9,19 @@ import jakarta.annotation.PreDestroy;
 @Component
 public class RegistrationClient {
 
-    @Value("${server.port}")
-    private String port;
+    // URL del Load Balancer (puede ser IP pública o DNS)
+    @Value("${loadbalancer.url}")
+    private String loadBalancerUrl;
+
+    // URL completa del backend (IP pública + puerto)
+    @Value("${backend.url}")
+    private String backendUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
-
-    private final String loadBalancerUrl = "http://localhost:8080";
 
     @PostConstruct
     public void register() {
         try {
-            String backendUrl = "http://localhost:" + port;
             String registerUrl = loadBalancerUrl + "/nodes/register?url=" + backendUrl;
             System.out.println("🚀 Intentando registrar en: " + registerUrl);
             restTemplate.postForObject(registerUrl, null, String.class);
@@ -32,7 +34,6 @@ public class RegistrationClient {
     @PreDestroy
     public void unregister() {
         try {
-            String backendUrl = "http://localhost:" + port;
             String unregisterUrl = loadBalancerUrl + "/nodes/unregister?url=" + backendUrl;
             restTemplate.delete(unregisterUrl);
             System.out.println("🔴 Nodo eliminado: " + backendUrl);
