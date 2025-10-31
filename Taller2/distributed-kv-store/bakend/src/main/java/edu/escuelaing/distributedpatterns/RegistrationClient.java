@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import java.util.Map;
 
 @Component
 public class RegistrationClient {
@@ -21,25 +20,24 @@ public class RegistrationClient {
     @PostConstruct
     public void register() {
         try {
-            String registerUrl = loadBalancerUrl + "/register"; // Endpoint corregido
-            Map<String, String> payload = Map.of("name", backendUrl); // JSON body esperado
-            System.out.println("🚀 Intentando registrar en: " + registerUrl);
-            String response = restTemplate.postForObject(registerUrl, payload, String.class);
-            System.out.println("🟢 Nodo registrado: " + response);
+            // Endpoint correcto para registrar nodos
+            String registerUrl = loadBalancerUrl + "/api/nodes/register";
+
+            // El backend envía su URL como query param "url"
+            System.out.println("🚀 Intentando registrar nodo en: " + registerUrl + "?url=" + backendUrl);
+
+            String response = restTemplate.postForObject(registerUrl + "?url=" + backendUrl, null, String.class);
+            System.out.println("🟢 Nodo registrado en el balanceador: " + response);
+
         } catch (Exception e) {
-            System.err.println("❌ Error registrando en balanceador: " + e.getMessage());
+            System.err.println("❌ Error registrando nodo: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     @PreDestroy
     public void unregister() {
-        try {
-            // Opcional: si quieres implementar un endpoint de "unregister" en tu backend, aquí va
-            System.out.println("🔴 Nodo eliminado: " + backendUrl);
-        } catch (Exception e) {
-            System.err.println("⚠️ Error al eliminar nodo del balanceador: " + e.getMessage());
-            e.printStackTrace();
-        }
+        // Opcional: implementar si quieres eliminar nodos dinámicamente
+        System.out.println("🔴 Nodo eliminado: " + backendUrl);
     }
 }
