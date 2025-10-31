@@ -3,7 +3,7 @@ package edu.escuelaing.distributedpatterns;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.beans.factory.annotation.Autowired;  // <--- IMPORT CORRECTO
+import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.annotation.PostConstruct;
 
 @SpringBootApplication
@@ -19,13 +19,15 @@ public class BackendApplication {
     @PostConstruct
     public void registerAtLoadBalancer() {
         try {
-            // Recibe la URL del backend como propiedad al iniciar la app
+            // Obtener URLs desde las propiedades de inicio de la aplicación
             String backendUrl = System.getProperty("backend.url", "http://localhost:8081");
-            String loadBalancerUrl = "http://ec2-ZZ-ZZ-ZZ-ZZ.compute-1.amazonaws.com:8080/nodes/register?url=" + backendUrl;
+            String loadBalancerUrl = System.getProperty("loadbalancer.url", "http://localhost:8080");
 
-            System.out.println("🚀 Intentando registrar en: " + loadBalancerUrl);
-            new RestTemplate().postForObject(loadBalancerUrl, null, String.class);
-            System.out.println("🟢 Registrado en balanceador: " + backendUrl);
+            String registerUrl = loadBalancerUrl + "/nodes/register?url=" + backendUrl;
+
+            System.out.println("🚀 Intentando registrar en: " + registerUrl);
+            new RestTemplate().postForObject(registerUrl, null, String.class);
+            System.out.println("🟢 Nodo registrado en el balanceador: " + backendUrl);
         } catch (Exception e) {
             System.err.println("❌ Error registrando en balanceador: " + e.getMessage());
         }
