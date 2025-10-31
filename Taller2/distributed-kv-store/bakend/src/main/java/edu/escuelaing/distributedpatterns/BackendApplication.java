@@ -21,7 +21,7 @@ public class BackendApplication {
             String loadBalancerUrl = System.getProperty("loadbalancer.url", "http://localhost:8080");
 
             // Endpoint correcto según tu RegistryController
-            String registerUrl = loadBalancerUrl + "/register";
+            String registerUrl = loadBalancerUrl + "/nodes/register";
 
             // Payload JSON esperado por el backend: {"name": "URL_DEL_NODO"}
             Map<String, String> payload = Map.of("name", backendUrl);
