@@ -8,6 +8,9 @@ import jakarta.annotation.PostConstruct;
 @SpringBootApplication
 public class BackendApplication {
 
+    @Autowired
+    private SimpleChat simpleChat;
+
     public static void main(String[] args) {
         SpringApplication.run(BackendApplication.class, args);
     }
