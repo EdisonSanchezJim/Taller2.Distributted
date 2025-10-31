@@ -21,7 +21,7 @@ public class RegistrationClient {
     @PostConstruct
     public void register() {
         try {
-            String registerUrl = loadBalancerUrl + "/register"; // Endpoint corregido
+            String registerUrl = loadBalancerUrl + "/nodes/register"; // Endpoint corregido
             Map<String, String> payload = Map.of("name", backendUrl); // JSON body esperado
             System.out.println("🚀 Intentando registrar en: " + registerUrl);
             String response = restTemplate.postForObject(registerUrl, payload, String.class);
