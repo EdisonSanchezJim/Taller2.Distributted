@@ -1,20 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Registro de Nombres Distribuido</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        input, button { margin: 5px; padding: 5px; font-size: 16px; }
+        ul { list-style: none; padding: 0; }
+        li { margin: 4px 0; background: #f0f0f0; padding: 6px 10px; border-radius: 4px; }
+    </style>
 </head>
 <body>
     <h1>Registrar Nombre</h1>
     <input type="text" id="nameInput" placeholder="Escribe tu nombre">
     <button onclick="registerName()">Registrar</button>
+    <button onclick="loadNames()">Actualizar Lista</button>
 
     <h2>Nombres Registrados</h2>
     <ul id="namesList"></ul>
 
     <script>
         async function registerName() {
-            const name = document.getElementById("nameInput").value;
+            const name = document.getElementById("nameInput").value.trim();
             if(!name) return alert("Escribe un nombre");
 
             const response = await fetch('/api/register', {
@@ -37,16 +44,22 @@
                 const data = await response.json();
                 const list = document.getElementById("namesList");
                 list.innerHTML = '';
+
                 for(const [name, timestamp] of Object.entries(data)) {
                     const li = document.createElement('li');
-                    li.textContent = `${name} - ${timestamp}`;
+                    // Convertir timestamp a fecha legible
+                    const date = new Date(timestamp);
+                    li.textContent = `${name} - ${date.toLocaleString()}`;
                     list.appendChild(li);
                 }
+            } else {
+                alert("Error al consultar nombres");
             }
         }
 
-        // Actualiza la lista cada 2 segundos
+        // Actualiza la lista cada 2 segundos automáticamente
         setInterval(loadNames, 2000);
+        // Carga inicial
         loadNames();
     </script>
 </body>
