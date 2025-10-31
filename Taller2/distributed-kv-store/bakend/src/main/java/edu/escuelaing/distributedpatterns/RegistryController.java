@@ -15,7 +15,7 @@ public class RegistryController {
     }
 
     // Recibe el nombre desde el cuerpo en formato JSON: {"name":"valor"}
-    @PostMapping("/nodes/register")
+    @PostMapping("/register")
     public String register(@RequestBody Map<String, String> payload) throws Exception {
         String name = payload.get("name");
         if (name == null || name.isBlank()) {
