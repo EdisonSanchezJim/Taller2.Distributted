@@ -1,73 +1,53 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Registro de Nombres</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        h1 { color: #333; }
-        form { margin-bottom: 20px; }
-        input[type="text"] { padding: 8px; font-size: 16px; }
-        button { padding: 8px 12px; font-size: 16px; }
-        ul { list-style: none; padding: 0; }
-        li { margin: 4px 0; background: #f0f0f0; padding: 6px 10px; border-radius: 4px; }
-    </style>
+    <title>Registro de Nombres Distribuido</title>
 </head>
 <body>
-    <h1>Registro de Nombres</h1>
+    <h1>Registrar Nombre</h1>
+    <input type="text" id="nameInput" placeholder="Escribe tu nombre">
+    <button onclick="registerName()">Registrar</button>
 
-    <form id="registerForm">
-        <input type="text" id="nameInput" placeholder="Ingresa tu nombre" required>
-        <button type="submit">Registrar</button>
-    </form>
-
-    <h2>Lista de Nombres</h2>
+    <h2>Nombres Registrados</h2>
     <ul id="namesList"></ul>
 
     <script>
-        const form = document.getElementById('registerForm');
-        const input = document.getElementById('nameInput');
-        const namesList = document.getElementById('namesList');
-        const apiBase = '/api'; // Base URL del load balancer
+        async function registerName() {
+            const name = document.getElementById("nameInput").value;
+            if(!name) return alert("Escribe un nombre");
 
-        // Función para mostrar nombres
-        async function fetchNames() {
-            try {
-                const res = await fetch(`${apiBase}/all-names`);
-                const data = await res.json();
-                namesList.innerHTML = '';
-                Object.entries(data).forEach(([name, timestamp]) => {
-                    const li = document.createElement('li');
-                    li.textContent = `${name} - ${timestamp}`;
-                    namesList.appendChild(li);
-                });
-            } catch (err) {
-                console.error('Error al obtener nombres:', err);
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+
+            if(response.ok) {
+                document.getElementById("nameInput").value = '';
+                loadNames();
+            } else {
+                alert("Error registrando nombre");
             }
         }
 
-        // Registrar nombre
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = input.value.trim();
-            if (!name) return;
-
-            try {
-                await fetch(`${apiBase}/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name })
-                });
-                input.value = '';
-                fetchNames(); // Actualizar lista
-            } catch (err) {
-                console.error('Error al registrar nombre:', err);
+        async function loadNames() {
+            const response = await fetch('/api/names');
+            if(response.ok) {
+                const data = await response.json();
+                const list = document.getElementById("namesList");
+                list.innerHTML = '';
+                for(const [name, timestamp] of Object.entries(data)) {
+                    const li = document.createElement('li');
+                    li.textContent = `${name} - ${timestamp}`;
+                    list.appendChild(li);
+                }
             }
-        });
+        }
 
-        // Actualizar lista cada 3 segundos
-        fetchNames();
-        setInterval(fetchNames, 3000);
+        // Actualiza la lista cada 2 segundos
+        setInterval(loadNames, 2000);
+        loadNames();
     </script>
 </body>
 </html>
