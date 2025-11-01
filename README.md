@@ -59,3 +59,73 @@ La función `loadNames()` realiza una solicitud GET al endpoint `/api/names` par
 Además, se establece un intervalo de actualización automática cada 2 segundos mediante `setInterval(loadNames, 2000)`, lo que permite que la interfaz refleje los cambios en tiempo real, incluso si otros usuarios están registrando nombres desde diferentes clientes. Esta interfaz es sencilla pero efectiva para demostrar la funcionalidad distribuida del sistema.
 
 
+Proceso de configuraciòn:
+
+Antes de ejecutar el sistema distribuido, asegúrate de tener el entorno correctamente configurado:
+
+Requisitos previos
+
+-Java 17 o superior
+-Maven
+-Git
+-Navegador web moderno
+-AWS CLI y acceso a EC2
+
+Clonado del repositorio
+git clone https://github.com/EdisonSanchezJim/Taller2.Distributted.git
+cd DISTRIBUTED-KV-STORE
+
+Compilación de los módulos
+cd backend
+mvn package
+
+cd ../loadbalancer
+mvn package
+
+Esto generará los archivos .jar en la carpeta target/ de cada módulo.
+
+
+Configuración de propiedades
+Edita los archivos application.properties en cada módulo para definir:
+Puertos de escucha (server.port)
+URL del balanceador (loadbalancer.url)
+URL del backend (backend.url)
+Configuración de JGroups (si aplica)
+
+
+Pasos para el despliegue:
+
+Puedes ejecutar cada módulo en tu máquina local usando:
+
+Usar bash
+Bk1
+java -Dbackend.url=http://34.228.18.69:8081 \
+     -Dloadbalancer.url=http://3.82.60.200:8080 \
+     -jar target/distributed-kv-store-1.0-SNAPSHOT.jar \
+     --server.port=8081 \
+     --debug
+
+
+
+Bk2
+java -Dbackend.url=http://54.235.17.161:8082 \
+     -Dloadbalancer.url=http://3.82.60.200:8080 \
+     -jar target/distributed-kv-store-1.0-SNAPSHOT.jar \
+     --server.port=8082 \
+     --debug
+
+LB
+java -Dbackends=http://34.228.18.69:8081,http://54.235.17.161:8082 \
+     -jar target/loadbalancer-1.0.0.jar \
+     --server.port=8080
+
+
+Despliegue en EC2 (AWS)
+Crea instancias EC2 para cada servicio (1 para el balanceador, 2+ para los backends).
+Abre los puertos necesarios en el grupo de seguridad (por ejemplo, 8080, 8081, 8082).
+Sube los .jar a cada instancia usando scp o SFTP.
+Ejecuta los servicios con java -jar en cada instancia.
+Verifica que los nodos backend se registren automáticamente en el balanceador.
+
+
+Pruebas.
