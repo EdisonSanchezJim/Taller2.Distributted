@@ -16,18 +16,24 @@ public class RegistryController {
         this.simpleChat = simpleChat;
     }
 
-    // Registrar nombre (sin lanzar Exception)
+    // Registrar nombre (sin throws Exception)
     @PostMapping("/register")
     public String register(@RequestBody Map<String, String> payload) {
-        String name = payload.get("name");
-        if (name == null || name.isBlank()) {
-            return "Error: name cannot be empty";
-        }
+        try {
+            String name = payload.get("name");
+            if (name == null || name.isBlank()) {
+                return "Error: name cannot be empty";
+            }
 
-        String timestamp = Instant.now().toString();
-        simpleChat.put(name, timestamp);
-        System.out.println("🟢 Nombre registrado en backend: " + name);
-        return "Registered: " + name;
+            String timestamp = Instant.now().toString();
+            simpleChat.put(name, timestamp);
+            System.out.println("🟢 Nombre registrado en backend: " + name);
+            return "Registered: " + name;
+
+        } catch (Exception e) {
+            System.err.println("❌ Error registrando nombre: " + e.getMessage());
+            return "Error registrando nombre";
+        }
     }
 
     // Listar nombres en texto plano vertical legible
