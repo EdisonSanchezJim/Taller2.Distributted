@@ -1,11 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Registro de Nombres Distribuido</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h1 { color: #333; }
+        input, button { padding: 8px; font-size: 16px; margin: 5px; }
+        ul { list-style: none; padding: 0; }
+        li { margin: 4px 0; background: #f0f0f0; padding: 6px 10px; border-radius: 4px; }
+    </style>
 </head>
 <body>
-    <h1>Registrar Nombre</h1>
+    <h1>Registro de Nombres Distribuido</h1>
+
     <input type="text" id="nameInput" placeholder="Escribe tu nombre">
     <button onclick="registerName()">Registrar</button>
 
@@ -13,41 +21,53 @@
     <ul id="namesList"></ul>
 
     <script>
+        const apiBase = '/api'; // base URL del load balancer
+
         async function registerName() {
-            const name = document.getElementById("nameInput").value;
+            const name = document.getElementById("nameInput").value.trim();
             if (!name) return alert("Escribe un nombre");
 
-            const response = await fetch('/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            });
+            try {
+                const response = await fetch(`${apiBase}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
 
-            if (response.ok) {
-                document.getElementById("nameInput").value = '';
-                loadNames();
-            } else {
+                if (response.ok) {
+                    document.getElementById("nameInput").value = '';
+                    loadNames();
+                } else {
+                    alert("Error registrando nombre");
+                }
+            } catch (err) {
+                console.error("Error:", err);
                 alert("Error registrando nombre");
             }
         }
 
         async function loadNames() {
-            const response = await fetch('/api/names');
-            if (response.ok) {
-                const data = await response.json();
-                const list = document.getElementById("namesList");
-                list.innerHTML = '';
-                for (const [name, timestamp] of Object.entries(data)) {
-                    const li = document.createElement('li');
-                    li.textContent = `${name} - ${timestamp}`;
-                    list.appendChild(li);
+            try {
+                const res = await fetch(`${apiBase}/all-names`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const list = document.getElementById("namesList");
+                    list.innerHTML = '';
+                    // Formato vertical: nombre -> fecha
+                    Object.entries(data).forEach(([name, timestamp]) => {
+                        const li = document.createElement('li');
+                        li.textContent = `${name} -> ${new Date(timestamp).toLocaleString()}`;
+                        list.appendChild(li);
+                    });
                 }
+            } catch (err) {
+                console.error("Error cargando nombres:", err);
             }
         }
 
         // Actualiza la lista cada 2 segundos
-        setInterval(loadNames, 2000);
         loadNames();
+        setInterval(loadNames, 2000);
     </script>
 </body>
 </html>
