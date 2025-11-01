@@ -2,67 +2,72 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Registro de Nombres Distribuido</title>
+    <title>Registro de Nombres</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
-        h1, h2 { color: #333; }
+        h1 { color: #333; }
+        form { margin-bottom: 20px; }
         input[type="text"] { padding: 8px; font-size: 16px; }
         button { padding: 8px 12px; font-size: 16px; }
-        pre { background: #f0f0f0; padding: 10px; border-radius: 4px; white-space: pre-wrap; }
+        ul { list-style: none; padding: 0; }
+        li { margin: 4px 0; background: #f0f0f0; padding: 6px 10px; border-radius: 4px; }
     </style>
 </head>
 <body>
-    <h1>Registrar Nombre</h1>
-    <input type="text" id="nameInput" placeholder="Escribe tu nombre">
-    <button onclick="registerName()">Registrar</button>
+    <h1>Registro de Nombres</h1>
 
-    <h2>Nombres Registrados</h2>
-    <pre id="namesList">Cargando...</pre>
+    <form id="registerForm">
+        <input type="text" id="nameInput" placeholder="Ingresa tu nombre" required>
+        <button type="submit">Registrar</button>
+    </form>
+
+    <h2>Lista de Nombres</h2>
+    <ul id="namesList"></ul>
 
     <script>
-        const namesList = document.getElementById("namesList");
+        const form = document.getElementById('registerForm');
+        const input = document.getElementById('nameInput');
+        const namesList = document.getElementById('namesList');
+        const apiBase = '/api'; // Base URL del load balancer
 
-        async function registerName() {
-            const name = document.getElementById("nameInput").value.trim();
-            if (!name) return alert("Escribe un nombre");
+        // Función para mostrar nombres
+        async function fetchNames() {
+            try {
+                const res = await fetch(`${apiBase}/all-names`);
+                const data = await res.json();
+                namesList.innerHTML = '';
+                Object.entries(data).forEach(([name, timestamp]) => {
+                    const li = document.createElement('li');
+                    li.textContent = `${name} - ${timestamp}`;
+                    namesList.appendChild(li);
+                });
+            } catch (err) {
+                console.error('Error al obtener nombres:', err);
+            }
+        }
+
+        // Registrar nombre
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = input.value.trim();
+            if (!name) return;
 
             try {
-                const response = await fetch('/api/register', {
+                await fetch(`${apiBase}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name })
                 });
-
-                if (response.ok) {
-                    document.getElementById("nameInput").value = '';
-                    loadNames();
-                } else {
-                    alert("Error registrando nombre");
-                }
+                input.value = '';
+                fetchNames(); // Actualizar lista
             } catch (err) {
-                console.error(err);
-                alert("Error al comunicarse con el servidor");
+                console.error('Error al registrar nombre:', err);
             }
-        }
+        });
 
-        async function loadNames() {
-            try {
-                const response = await fetch('/names'); // Endpoint que devuelve texto plano
-                if (response.ok) {
-                    const text = await response.text();
-                    namesList.textContent = text || "No hay nombres registrados";
-                } else {
-                    namesList.textContent = "Error al cargar nombres";
-                }
-            } catch (err) {
-                console.error(err);
-                namesList.textContent = "Error al comunicarse con el servidor";
-            }
-        }
-
-        // Actualiza la lista cada 3 segundos
-        setInterval(loadNames, 3000);
-        loadNames();
+        // Actualizar lista cada 3 segundos
+        fetchNames();
+        setInterval(fetchNames, 3000);
     </script>
 </body>
 </html>
