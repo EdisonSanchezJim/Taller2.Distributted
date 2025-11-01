@@ -1,8 +1,9 @@
 package edu.escuelaing.distributedpatterns;
 
 import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 @RestController
@@ -10,39 +11,49 @@ import java.util.Map;
 public class RegistryController {
 
     private final SimpleChat simpleChat;
-    private final RegistrationClient registrationClient;
 
-    @Autowired
-    public RegistryController(SimpleChat simpleChat, RegistrationClient registrationClient) {
+    public RegistryController(SimpleChat simpleChat) {
         this.simpleChat = simpleChat;
-        this.registrationClient = registrationClient;
     }
 
-    // Registrar nombre y timestamp
+    // Registrar nombre (sin throws Exception)
     @PostMapping("/register")
     public String register(@RequestBody Map<String, String> payload) {
-        String name = payload.get("name");
-        if (name == null || name.isBlank()) {
-            return "Error: name cannot be empty";
-        }
-
         try {
+            String name = payload.get("name");
+            if (name == null || name.isBlank()) {
+                return "Error: name cannot be empty";
+            }
+
             String timestamp = Instant.now().toString();
             simpleChat.put(name, timestamp);
-            registrationClient.registerName(name);
             System.out.println("🟢 Nombre registrado en backend: " + name);
             return "Registered: " + name;
+
         } catch (Exception e) {
-            e.printStackTrace();
-            return "Error registrando nombre: " + e.getMessage();
+            System.err.println("❌ Error registrando nombre: " + e.getMessage());
+            return "Error registrando nombre";
         }
     }
 
-    // Mostrar nombres en formato vertical
+    // Listar nombres en texto plano vertical legible
     @GetMapping("/names")
-    public String getAll() {
-        StringBuilder sb = new StringBuilder("📋 Lista de registros:\n");
-        simpleChat.getMap().forEach((k, v) -> sb.append(k).append(" -> ").append(v).append("\n"));
+    public String getAllPlain() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
+                                                       .withZone(ZoneId.systemDefault());
+        StringBuilder sb = new StringBuilder();
+        simpleChat.getMap().forEach((name, ts) -> {
+            sb.append(name)
+              .append(" -> ")
+              .append(formatter.format(Instant.parse(ts)))
+              .append("\n");
+        });
         return sb.toString();
+    }
+
+    // Servir index.html si lo tienes en src/main/resources/static/
+    @GetMapping("/")
+    public String home() {
+        return "index.html";
     }
 }
