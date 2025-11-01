@@ -1,8 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Registro de Nombres Distribuido</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        h1, h2 { color: #333; }
+        input[type="text"] { padding: 8px; font-size: 16px; }
+        button { padding: 8px 12px; font-size: 16px; }
+        pre { background: #f0f0f0; padding: 10px; border-radius: 4px; white-space: pre-wrap; }
+    </style>
 </head>
 <body>
     <h1>Registrar Nombre</h1>
@@ -10,43 +17,51 @@
     <button onclick="registerName()">Registrar</button>
 
     <h2>Nombres Registrados</h2>
-    <ul id="namesList"></ul>
+    <pre id="namesList">Cargando...</pre>
 
     <script>
+        const namesList = document.getElementById("namesList");
+
         async function registerName() {
-            const name = document.getElementById("nameInput").value;
+            const name = document.getElementById("nameInput").value.trim();
             if (!name) return alert("Escribe un nombre");
 
-            const response = await fetch('/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            });
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
 
-            if (response.ok) {
-                document.getElementById("nameInput").value = '';
-                loadNames();
-            } else {
-                alert("Error registrando nombre");
+                if (response.ok) {
+                    document.getElementById("nameInput").value = '';
+                    loadNames();
+                } else {
+                    alert("Error registrando nombre");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error al comunicarse con el servidor");
             }
         }
 
         async function loadNames() {
-            const response = await fetch('/api/names');
-            if (response.ok) {
-                const data = await response.json();
-                const list = document.getElementById("namesList");
-                list.innerHTML = '';
-                for (const [name, timestamp] of Object.entries(data)) {
-                    const li = document.createElement('li');
-                    li.textContent = `${name} - ${timestamp}`;
-                    list.appendChild(li);
+            try {
+                const response = await fetch('/names'); // Endpoint que devuelve texto plano
+                if (response.ok) {
+                    const text = await response.text();
+                    namesList.textContent = text || "No hay nombres registrados";
+                } else {
+                    namesList.textContent = "Error al cargar nombres";
                 }
+            } catch (err) {
+                console.error(err);
+                namesList.textContent = "Error al comunicarse con el servidor";
             }
         }
 
-        // Actualiza la lista cada 2 segundos
-        setInterval(loadNames, 2000);
+        // Actualiza la lista cada 3 segundos
+        setInterval(loadNames, 3000);
         loadNames();
     </script>
 </body>
