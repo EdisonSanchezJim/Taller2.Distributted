@@ -18,29 +18,39 @@ public class RegistryController {
         this.registrationClient = registrationClient;
     }
 
-    // Recibe el nombre desde el cuerpo en formato JSON: {"name":"valor"}
+    /**
+     * Recibe el nombre desde el cuerpo en formato JSON: {"name":"valor"}
+     * Registra el nombre con timestamp en el backend
+     */
     @PostMapping("/register")
     public String register(@RequestBody Map<String, String> payload) {
         String name = payload.get("name");
         if (name == null || name.isBlank()) {
             return "Error: name cannot be empty";
         }
-    
+
         String timestamp = Instant.now().toString();
         simpleChat.put(name, timestamp);
         System.out.println("🟢 Nombre registrado en backend: " + name);
+
+        // Opcional: aquí podrías propagar a otros nodos si deseas replicación entre backends
+
         return "Registered: " + name;
     }
 
-
+    /**
+     * Devuelve todos los nombres con sus timestamps
+     */
     @GetMapping("/names")
     public Map<String, String> getAll() {
         return simpleChat.getMap();
     }
 
-    // Opcional: sirve index.html si quieres abrirlo desde el navegador
+    /**
+     * Sirve la página HTML principal si está en resources/static/index.html
+     */
     @GetMapping("/")
     public String home() {
-        return "index.html"; // Asegúrate de tener index.html en src/main/resources/static/
+        return "index.html";
     }
 }
