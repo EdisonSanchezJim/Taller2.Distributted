@@ -25,17 +25,13 @@ public class RegistryController {
         if (name == null || name.isBlank()) {
             return "Error: name cannot be empty";
         }
-
-        // Guardar localmente
+    
         String timestamp = Instant.now().toString();
         simpleChat.put(name, timestamp);
-        System.out.println("🟢 Nombre registrado localmente en backend: " + name);
-
-        // Replicar a los demás nodos
-        registrationClient.replicateToOtherNodes(payload);
-
+        System.out.println("🟢 Nombre registrado en backend: " + name);
         return "Registered: " + name;
     }
+
 
     @GetMapping("/names")
     public Map<String, String> getAll() {
