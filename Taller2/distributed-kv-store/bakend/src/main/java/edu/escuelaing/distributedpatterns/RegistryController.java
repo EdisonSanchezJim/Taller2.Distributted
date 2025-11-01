@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;  // <--- Import necesario
+import java.util.Map;
 
 @RestController
 @RequestMapping("/")
@@ -16,7 +16,7 @@ public class RegistryController {
         this.simpleChat = simpleChat;
     }
 
-    // Registrar nombre
+    // Registrar nombre (sin lanzar Exception)
     @PostMapping("/register")
     public String register(@RequestBody Map<String, String> payload) {
         String name = payload.get("name");
@@ -30,10 +30,11 @@ public class RegistryController {
         return "Registered: " + name;
     }
 
-    // Listar nombres en texto plano vertical
+    // Listar nombres en texto plano vertical legible
     @GetMapping("/names")
     public String getAllPlain() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").withZone(ZoneId.systemDefault());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
+                                                       .withZone(ZoneId.systemDefault());
         StringBuilder sb = new StringBuilder();
         simpleChat.getMap().forEach((name, ts) -> {
             sb.append(name)
@@ -42,5 +43,11 @@ public class RegistryController {
               .append("\n");
         });
         return sb.toString();
+    }
+
+    // Servir index.html si lo tienes en src/main/resources/static/
+    @GetMapping("/")
+    public String home() {
+        return "index.html";
     }
 }
