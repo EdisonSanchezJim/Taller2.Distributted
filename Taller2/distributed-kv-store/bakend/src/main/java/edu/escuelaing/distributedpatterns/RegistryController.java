@@ -3,28 +3,37 @@ package edu.escuelaing.distributedpatterns;
 import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/")
 public class RegistryController {
 
     private final SimpleChat simpleChat;
+    private final RegistrationClient registrationClient;
 
-    public RegistryController(SimpleChat simpleChat) {
+    @Autowired
+    public RegistryController(SimpleChat simpleChat, RegistrationClient registrationClient) {
         this.simpleChat = simpleChat;
+        this.registrationClient = registrationClient;
     }
 
     // Recibe el nombre desde el cuerpo en formato JSON: {"name":"valor"}
     @PostMapping("/register")
-    public String register(@RequestBody Map<String, String> payload) throws Exception {
+    public String register(@RequestBody Map<String, String> payload) {
         String name = payload.get("name");
         if (name == null || name.isBlank()) {
             return "Error: name cannot be empty";
         }
 
+        // Guardar localmente
         String timestamp = Instant.now().toString();
         simpleChat.put(name, timestamp);
-        System.out.println("🟢 Nombre registrado en backend: " + name);
+        System.out.println("🟢 Nombre registrado localmente en backend: " + name);
+
+        // Replicar a los demás nodos
+        registrationClient.replicateToOtherNodes(payload);
+
         return "Registered: " + name;
     }
 
