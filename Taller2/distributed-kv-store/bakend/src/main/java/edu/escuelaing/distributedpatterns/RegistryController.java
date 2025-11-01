@@ -2,60 +2,44 @@ package edu.escuelaing.distributedpatterns;
 
 import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
-import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/")
 public class RegistryController {
 
     private final SimpleChat simpleChat;
-    private final RegistrationClient registrationClient;
 
-    @Autowired
-    public RegistryController(SimpleChat simpleChat, RegistrationClient registrationClient) {
+    public RegistryController(SimpleChat simpleChat) {
         this.simpleChat = simpleChat;
-        this.registrationClient = registrationClient;
     }
 
-    /**
-     * Recibe el nombre desde el cuerpo en formato JSON: {"name":"valor"}
-     * Registra el nombre con timestamp en el backend
-     */
+    // Registrar nombre
     @PostMapping("/register")
     public String register(@RequestBody Map<String, String> payload) {
-        try {
-            String name = payload.get("name");
-            if (name == null || name.isBlank()) {
-                return "Error: name cannot be empty";
-            }
-
-            String timestamp = Instant.now().toString();
-            simpleChat.put(name, timestamp);
-            System.out.println("🟢 Nombre registrado en backend: " + name);
-
-            // Opcional: aquí podrías propagar a otros nodos si deseas replicación entre backends
-
-            return "Registered: " + name;
-        } catch (Exception e) {
-            System.err.println("❌ Error registrando nombre: " + e.getMessage());
-            return "Error registrando nombre";
+        String name = payload.get("name");
+        if (name == null || name.isBlank()) {
+            return "Error: name cannot be empty";
         }
+
+        String timestamp = Instant.now().toString();
+        simpleChat.put(name, timestamp);
+        System.out.println("🟢 Nombre registrado en backend: " + name);
+        return "Registered: " + name;
     }
 
-    /**
-     * Devuelve todos los nombres con sus timestamps
-     */
+    // Listar nombres en texto plano vertical
     @GetMapping("/names")
-    public Map<String, String> getAll() {
-        return simpleChat.getMap();
-    }
-
-    /**
-     * Sirve la página HTML principal si está en resources/static/index.html
-     */
-    @GetMapping("/")
-    public String home() {
-        return "index.html";
+    public String getAllPlain() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").withZone(ZoneId.systemDefault());
+        StringBuilder sb = new StringBuilder();
+        simpleChat.getMap().forEach((name, ts) -> {
+            sb.append(name)
+              .append(" -> ")
+              .append(formatter.format(Instant.parse(ts)))
+              .append("\n");
+        });
+        return sb.toString();
     }
 }
