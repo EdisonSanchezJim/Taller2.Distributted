@@ -5,10 +5,8 @@ import org.jgroups.util.Util;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Component
 public class SimpleChat implements Receiver {
@@ -78,16 +76,5 @@ public class SimpleChat implements Receiver {
     @Override
     public void viewAccepted(View new_view) {
         System.out.println("** view: " + new_view);
-    }
-
-    // 🔥 NUEVO: Método para obtener los miembros actuales del clúster
-    public List<String> getMembers() {
-        if (channel == null || channel.getView() == null) {
-            return List.of("No members connected");
-        }
-        return channel.getView().getMembers()
-                      .stream()
-                      .map(Address::toString)
-                      .collect(Collectors.toList());
     }
 }
