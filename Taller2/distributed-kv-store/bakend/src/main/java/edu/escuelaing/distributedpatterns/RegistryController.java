@@ -24,18 +24,23 @@ public class RegistryController {
      */
     @PostMapping("/register")
     public String register(@RequestBody Map<String, String> payload) {
-        String name = payload.get("name");
-        if (name == null || name.isBlank()) {
-            return "Error: name cannot be empty";
+        try {
+            String name = payload.get("name");
+            if (name == null || name.isBlank()) {
+                return "Error: name cannot be empty";
+            }
+
+            String timestamp = Instant.now().toString();
+            simpleChat.put(name, timestamp);
+            System.out.println("🟢 Nombre registrado en backend: " + name);
+
+            // Opcional: aquí podrías propagar a otros nodos si deseas replicación entre backends
+
+            return "Registered: " + name;
+        } catch (Exception e) {
+            System.err.println("❌ Error registrando nombre: " + e.getMessage());
+            return "Error registrando nombre";
         }
-
-        String timestamp = Instant.now().toString();
-        simpleChat.put(name, timestamp);
-        System.out.println("🟢 Nombre registrado en backend: " + name);
-
-        // Opcional: aquí podrías propagar a otros nodos si deseas replicación entre backends
-
-        return "Registered: " + name;
     }
 
     /**
